@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+
+backend/.venv/
+backend/.env
+
+__pycache__/
+*.pyc
+*.pyo
+
+.DS_Store
+
+# Docker 数据卷不要提交
+pgdata/

@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: streamhub-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: streamhub
+    ports:
+      - "5433:5432"
+    volumes:
+      - streamhub_pgdata:/var/lib/postgresql/data
+      - ./backend/docker-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d streamhub"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: streamhub-backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://postgres:123456@postgres:5432/streamhub
+      SECRET_KEY: streamhub-demo-secret-key
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./public:/app/public
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: streamhub-frontend
+    restart: always
+    ports:
+      - "5173:3266"
+    depends_on:
+      - backend
+
+volumes:
+  streamhub_pgdata:
